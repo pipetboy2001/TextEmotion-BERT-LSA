@@ -8,11 +8,13 @@ from sklearn.metrics import log_loss, accuracy_score
 from sklearn.preprocessing import LabelEncoder
 
 # Paso 1: Recopilación y preparación de los datos
+print ("Cargando datos...")
 dataset = pd.read_csv("../Dataset/BERT_sentiment_IMDB_Dataset.csv")
 documents = dataset["review"]
 labels = dataset["sentiment"]
 
 # Paso 2: Construcción del diccionario de palabras emocionales utilizando WordNet
+print ("Construyendo diccionario de palabras emocionales...")
 emotional_words = set()
 for synset in wordnet.all_synsets():
     for lemma in synset.lemmas():
@@ -20,16 +22,31 @@ for synset in wordnet.all_synsets():
             emotional_words.add(lemma.name())
 
 # Paso 3: Construcción de una matriz de documento de palabras utilizando TF-IDF
+print ("Construyendo matriz de documento de palabras...")
 vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(documents)
 
 # Paso 4: Función de peso (no se implementa en este código)
 
 # Paso 5 y 6: SVD (Descomposición de valores singulares) y Reducción utilizando LSA
+print("Realizando reducción de dimensionalidad...")
 lsa = TruncatedSVD(n_components=100)  # Aumenta el número de componentes principales
 X_lsa = lsa.fit_transform(X)
 
+# Muestra las primeras tres filas de las matrices U, Σ y V^T
+print("Matriz U:")
+print(pd.DataFrame(lsa.components_[:3, :]))
+print("\nMatriz Σ:")
+print(pd.DataFrame(lsa.singular_values_[:3]))
+print("\nMatriz V^T:")
+print(pd.DataFrame(X_lsa[:3, :]))
+
+# Muestra las primeras tres filas de la matriz X_lsa
+print("Matriz X_lsa:")
+print(pd.DataFrame(X_lsa[:3, :]))
+
 # Paso 7: División de los datos en conjuntos de entrenamiento y prueba
+print("Dividiendo los datos en conjuntos de entrenamiento y prueba...")
 X_train, X_test, y_train, y_test = train_test_split(X_lsa, labels, test_size=0.2, random_state=42)
 
 # Paso adicional: Conversión de etiquetas de clase a valores numéricos
@@ -38,6 +55,7 @@ y_train = label_encoder.fit_transform(y_train)
 y_test = label_encoder.transform(y_test)
 
 # Paso 8: Ajuste de hiperparámetros del Random Forest
+print ("Ajustando hiperparámetros del Random Forest...")
 random_forest = RandomForestClassifier(max_depth=10, min_samples_split=5)
 random_forest.fit(X_train, y_train)
 
@@ -75,4 +93,5 @@ def classifySentiment(text):
 
 review_text = "Avengers: Infinity War at least had the good taste to abstain from Jeremy Renner. No such luck in Endgame."
 sentiment = classifySentiment(review_text)
+print("\nTexto:", review_text)
 print("Sentiment:", sentiment)
