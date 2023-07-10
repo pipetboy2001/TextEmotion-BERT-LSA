@@ -6,10 +6,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import log_loss, accuracy_score
 from sklearn.preprocessing import LabelEncoder
+import matplotlib.pyplot as plt
+from sklearn import tree
 
 # Paso 1: Recopilación y preparación de los datos
 print ("Cargando datos...")
 dataset = pd.read_csv("../Dataset/BERT_sentiment_IMDB_Dataset.csv")
+print("Matriz de dataset:")
+print(dataset.head())
 documents = dataset["review"]
 labels = dataset["sentiment"]
 
@@ -25,6 +29,8 @@ for synset in wordnet.all_synsets():
 print ("Construyendo matriz de documento de palabras...")
 vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(documents)
+print("Matriz de documento de palabras:")
+print(pd.DataFrame(X[:3, :].toarray()))
 
 # Paso 4: Función de peso (no se implementa en este código)
 
@@ -39,7 +45,7 @@ print(pd.DataFrame(lsa.components_[:3, :]))
 print("\nMatriz Σ:")
 print(pd.DataFrame(lsa.singular_values_[:3]))
 print("\nMatriz V^T:")
-print(pd.DataFrame(X_lsa[:3, :]))
+print(pd.DataFrame(lsa.transform(X).T[:3, :]))
 
 # Muestra las primeras tres filas de la matriz X_lsa
 print("Matriz X_lsa:")
@@ -58,6 +64,13 @@ y_test = label_encoder.transform(y_test)
 print ("Ajustando hiperparámetros del Random Forest...")
 random_forest = RandomForestClassifier(max_depth=10, min_samples_split=5)
 random_forest.fit(X_train, y_train)
+# Obtén el primer árbol de decisión del modelo de Random Forest
+primer_arbol = random_forest.estimators_[0]
+
+# Visualiza el árbol de decisión
+fig, ax = plt.subplots(figsize=(12, 12))
+tree.plot_tree(primer_arbol, ax=ax)
+plt.show()
 
 # Paso 9: Predicción en el conjunto de entrenamiento y cálculo de la pérdida y precisión
 y_train_pred = random_forest.predict(X_train)
